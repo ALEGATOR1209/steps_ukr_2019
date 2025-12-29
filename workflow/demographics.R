@@ -1,5 +1,6 @@
 library(dplyr)
 library(forcats)
+library(ggplot2)
 
 data <- read.csv("data/ukr2019.csv")
 agg_by_lang <- data %>% count(i6)
@@ -9,11 +10,23 @@ agg_by_land <- factor(
     labels = c("Ukrainian", "Russian", "English")
 )
 
-ggplot(agg_by_lang, aes(x = fct_reorder(agg_by_land, n), y = n)) + geom_col() + labs(x = "Interview language", y = "Count")
+ggplot(agg_by_lang, aes(x = fct_reorder(agg_by_land, n), y = n)) +
+  geom_col() +
+  geom_text(
+    aes(label = n),
+    vjust = -0.3
+  ) +
+  labs(x = "Interview language", y = "Count")
 
 agg_by_region <- data %>% count(region)
 
-ggplot(agg_by_region, aes(x = fct_reorder(region, n), y = n)) + geom_col() + labs(x = "Region", y = "Count")
+ggplot(agg_by_region, aes(x = fct_reorder(region, n), y = n)) +
+  geom_col() +
+  geom_text(
+    aes(label = n),
+    vjust = -0.3
+  ) +
+  labs(x = "Region", y = "Count")
 
 agg_by_ethnicity <- data %>% count(c6)
 agg_by_ethnicity$c6 <- factor(
@@ -37,11 +50,21 @@ agg_by_ethnicity$c6 <- factor(
 
 ggplot(agg_by_ethnicity, aes(x = fct_reorder(c6, n), y = n)) +
   geom_col() +
+  geom_text(
+    aes(label = n),
+    vjust = -0.3
+  ) +
   scale_y_log10() +
   labs(x = "Ethnicity", y = "Count, log")
 
 agg_by_age_range <- data %>% count(agerange)
-ggplot(agg_by_age_range, aes(x = agerange, y = n)) + geom_col() + labs(x = "Age range", y = "Count")
+ggplot(agg_by_age_range, aes(x = agerange, y = n)) +
+  geom_col() +
+  geom_text(
+    aes(label = n),
+    vjust = -0.3
+  ) +
+  labs(x = "Age range", y = "Count")
 
 agg_by_education <- data %>% count(c5)
 agg_by_education$c5 <- factor(
@@ -62,6 +85,10 @@ agg_by_education$c5 <- factor(
 
 ggplot(agg_by_education, aes(x = c5, y = n)) +
   geom_col() +
+  geom_text(
+    aes(label = n),
+    vjust = -0.3
+  ) +
   scale_y_log10() +
   labs(x = "Education level", y = "Count, log")
 
@@ -82,6 +109,10 @@ agg_by_marital$c7 <- factor(
 
 ggplot(agg_by_marital, aes(x = fct_reorder(c7, n), y = n)) +
   geom_col() +
+  geom_text(
+    aes(label = n),
+    vjust = -0.3
+  ) +
   scale_y_log10() +
   labs(x = "Marital status", y = "Count, log")
 
@@ -106,7 +137,15 @@ agg_by_employment$c8 <- factor(
 )
 ggplot(agg_by_employment, aes(x = fct_reorder(c8, n), y = n)) +
   geom_col() +
+  geom_text(
+    aes(label = n),
+    vjust = -0.3
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(x = "Employment status", y = "Count, log")
 
 agg_by_sex <- data %>% count(sex)
-ggplot(agg_by_sex, aes(x = fct_reorder(sex, n), y = n)) + geom_col()
+ggplot(agg_by_sex, aes(x = fct_reorder(sex, n), y = n)) + geom_col() + geom_text(
+  aes(label = n),
+  vjust = -0.3
+)
