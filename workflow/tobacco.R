@@ -6,15 +6,14 @@ library(scales)
 source("utils/survey.R")
 
 data <- read.csv("data/ukr2019.csv")
+data$smoker <- ifelse(data$t1 == 1, 1, 0)
+survey <- step2019(data)
 
 ##################################
 # SECTION 1. General tobacco use
 ##################################
 
 plot_general_tobacco_use <- function() {
-  data$smoker <- ifelse(data$t1 == 1, 1, 0)
-
-  survey <- step2019(data)
   print("Mean smoking prevalence:")
   svymean(~smoker, survey, na.rm = TRUE)
 
@@ -143,5 +142,255 @@ plot_urban_rural_vape_use <- function() {
     )
 }
 
+##################################
+# SECTION 3. Cigarettes use
+##################################
+get_cigarettes_users <- function(survey) {
+  survey <- update(
+    survey,
+    cigarettes = ifelse(t1a == 1, 1, 0)
+  )
+
+  return(survey)
+}
+
+plot_general_cigarettes_use <- function() {
+  survey <- get_cigarettes_users(survey)
+
+  results <- bind_rows(
+    svyby(~cigarettes, ~sex + agerange, survey, svymean, na.rm = TRUE),
+    svyby(~cigarettes, ~sex, survey, svymean, na.rm = TRUE) %>% mutate(agerange = "18-69")
+  )
+
+  results$agerange <- factor(
+    results$agerange,
+    levels = c("18-29", "30-44", "45-59", "60-69", "18-69")
+  )
+
+  print("Cigarettes prevalence:")
+  print(results)
+
+  ggplot(results, aes(x = agerange, y = cigarettes, fill = sex)) +
+    geom_col(position = position_dodge(width = 0.8)) +
+    geom_text(
+      aes(label = scales::percent(cigarettes, accuracy = 0.01)),
+      position = position_dodge(width = 1.2),
+      vjust = -0.3,
+      size = 3.5
+    ) +
+    scale_y_continuous(
+      labels = percent_format(accuracy = 1),
+      limits = c(0, 1.0)
+    ) +
+    labs(
+      x = "Age group",
+      y = "Cigarettes prevalence",
+      fill = "Sex",
+      title = "Cigarette smoking prevalence by sex and age",
+      subtitle = "Survey-weighted estimates with 95% confidence intervals"
+    )
+}
+
+plot_urban_rural_cigarettes_use <- function() {
+  survey <- get_cigarettes_users(survey)
+
+  results <- svyby(~cigarettes, ~ur, survey, svymean, na.rm = TRUE)
+
+  ggplot(results, aes(x = ur, y = cigarettes)) +
+    geom_col(position = position_dodge(width = 0.8)) +
+    geom_errorbar(
+      aes(
+        ymin = cigarettes - 1.96 * se,
+        ymax = cigarettes + 1.96 * se
+      ),
+      position = position_dodge(width = 0.8),
+      width = 0.2
+    ) +
+    geom_text(
+      aes(label = scales::percent(cigarettes, accuracy = 0.01)),
+      position = position_dodge(width = 1.2),
+      vjust = -0.3,
+      size = 3.5
+    ) +
+    scale_y_continuous(
+      labels = percent_format(accuracy = 1),
+        limits = c(0, 1.0)
+    ) +
+    labs(
+      y = "Cigarettes prevalence",
+      title = "Cigarettes smoking prevalence by urban/rural",
+      subtitle = "Survey-weighted estimates with 95% confidence intervals"
+    )
+}
+
+##################################
+# SECTION 4. Hookah use
+##################################
+get_hookah_users <- function(survey) {
+  survey <- update(
+    survey,
+    hookah = ifelse(t1d == 1, 1, 0)
+  )
+
+  return(survey)
+}
+
+plot_general_hookah_use <- function() {
+  survey <- get_hookah_users(survey)
+
+  results <- bind_rows(
+    svyby(~hookah, ~sex + agerange, survey, svymean, na.rm = TRUE),
+    svyby(~hookah, ~sex, survey, svymean, na.rm = TRUE) %>% mutate(agerange = "18-69")
+  )
+
+  results$agerange <- factor(
+    results$agerange,
+    levels = c("18-29", "30-44", "45-59", "60-69", "18-69")
+  )
+
+  print("Hookah prevalence:")
+  print(results)
+
+  ggplot(results, aes(x = agerange, y = hookah, fill = sex)) +
+    geom_col(position = position_dodge(width = 0.8)) +
+    geom_text(
+      aes(label = scales::percent(hookah, accuracy = 0.01)),
+      position = position_dodge(width = 1.2),
+      vjust = -0.3,
+      size = 3.5
+    ) +
+    scale_y_continuous(
+      labels = percent_format(accuracy = 1),
+      limits = c(0, 1.0)
+    ) +
+    labs(
+      x = "Age group",
+      y = "Hookah prevalence",
+      fill = "Sex",
+      title = "Hookah smoking prevalence by sex and age",
+      subtitle = "Survey-weighted estimates with 95% confidence intervals"
+    )
+}
+
+plot_urban_rural_hookah_use <- function() {
+  survey <- get_hookah_users(survey)
+
+  results <- svyby(~hookah, ~ur, survey, svymean, na.rm = TRUE)
+
+  ggplot(results, aes(x = ur, y = hookah)) +
+    geom_col(position = position_dodge(width = 0.8)) +
+    geom_errorbar(
+      aes(
+        ymin = hookah - 1.96 * se,
+        ymax = hookah + 1.96 * se
+      ),
+      position = position_dodge(width = 0.8),
+      width = 0.2
+    ) +
+    geom_text(
+      aes(label = scales::percent(hookah, accuracy = 0.01)),
+      position = position_dodge(width = 1.2),
+      vjust = -0.3,
+      size = 3.5
+    ) +
+    scale_y_continuous(
+      labels = percent_format(accuracy = 1),
+        limits = c(0, 0.25)
+    ) +
+    labs(
+      y = "Hookah prevalence",
+      title = "Hookah smoking prevalence by urban/rural",
+      subtitle = "Survey-weighted estimates with 95% confidence intervals"
+    )
+}
+
+##################################
+# SECTION 5. Non-smoked tobacco use
+##################################
+get_non_smoked_tobacco_users <- function(survey) {
+  survey <- update(
+    survey,
+    non_smoked_tobacco = ifelse(t1e == 1, 1, 0)
+  )
+
+  return(survey)
+}
+
+plot_general_non_smoked_tobacco_use <- function() {
+  survey <- get_non_smoked_tobacco_users(survey)
+
+  results <- bind_rows(
+    svyby(~non_smoked_tobacco, ~sex + agerange, survey, svymean, na.rm = TRUE),
+    svyby(~non_smoked_tobacco, ~sex, survey, svymean, na.rm = TRUE) %>% mutate(agerange = "18-69")
+  )
+
+  results$agerange <- factor(
+    results$agerange,
+    levels = c("18-29", "30-44", "45-59", "60-69", "18-69")
+  )
+
+  print("Non-smoked tobacco prevalence:")
+  print(results)
+
+  ggplot(results, aes(x = agerange, y = non_smoked_tobacco, fill = sex)) +
+    geom_col(position = position_dodge(width = 0.8)) +
+    geom_text(
+      aes(label = scales::percent(non_smoked_tobacco, accuracy = 0.01)),
+      position = position_dodge(width = 1.2),
+      vjust = -0.3,
+      size = 3.5
+    ) +
+    scale_y_continuous(
+      labels = percent_format(accuracy = 1),
+      limits = c(0, 0.05)
+    ) +
+    labs(
+      x = "Age group",
+      y = "Non-smoked tobacco prevalence",
+      fill = "Sex",
+      title = "Non-smoked tobacco smoking prevalence by sex and age",
+      subtitle = "Survey-weighted estimates with 95% confidence intervals"
+    )
+}
+
+plot_urban_rural_non_smoked_tobacco_use <- function() {
+  survey <- get_non_smoked_tobacco_users(survey)
+
+  results <- svyby(~non_smoked_tobacco, ~ur, survey, svymean, na.rm = TRUE)
+
+  ggplot(results, aes(x = ur, y = non_smoked_tobacco)) +
+    geom_col(position = position_dodge(width = 0.8)) +
+    geom_errorbar(
+      aes(
+        ymin = non_smoked_tobacco - 1.96 * se,
+        ymax = non_smoked_tobacco + 1.96 * se
+      ),
+      position = position_dodge(width = 0.8),
+      width = 0.2
+    ) +
+    geom_text(
+      aes(label = scales::percent(non_smoked_tobacco, accuracy = 0.01)),
+      position = position_dodge(width = 1.2),
+      vjust = -0.3,
+      size = 3.5
+    ) +
+    scale_y_continuous(
+      labels = percent_format(accuracy = 1),
+        limits = c(0, 0.05)
+    ) +
+    labs(
+      y = "Non-smoked tobacco prevalence",
+      title = "Non-smoked tobacco smoking prevalence by urban/rural",
+      subtitle = "Survey-weighted estimates with 95% confidence intervals"
+    )
+}
+
+
 plot_general_vape_use()
 plot_urban_rural_vape_use()
+plot_general_cigarettes_use()
+plot_urban_rural_cigarettes_use()
+plot_general_hookah_use()
+plot_urban_rural_hookah_use()
+plot_general_non_smoked_tobacco_use()
+plot_urban_rural_non_smoked_tobacco_use()
