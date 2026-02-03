@@ -15,7 +15,7 @@ survey <- step2019(data)
 plot_general_tobacco_use <- function() {
   survey <- update(survey, smoker = ifelse(data$t1 == 1, 1, 0))
   print("Mean smoking prevalence:")
-  svymean(~smoker, survey, na.rm = TRUE)
+  print(svymean(~smoker, survey, na.rm = TRUE))
 
   print("Smoking prevalence over sex and age:")
   results <- bind_rows(
