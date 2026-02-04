@@ -19,6 +19,8 @@ plot_bmi_by_age <- function () {
     svyby(~mbmi, ~sex, survey, svymean, na.rm = TRUE) %>% mutate(agerange = "18-69")
   )
 
+  print(summary(svyglm(mbmi ~ sex + agerange, design = survey)))
+
   results$agerange <- factor(
     results$agerange,
     levels = c("18-29", "30-44", "45-59", "60-69", "18-69")
@@ -155,7 +157,7 @@ plot_bmi_by_blood_pressure <- function() {
   print("Blood pressure over bmi clusters:")
   print(grouped)
 
-  ggplot(grouped, aes(x = weight_type, group = sex)) +
+  p1 <- ggplot(grouped, aes(x = weight_type, group = sex)) +
     geom_linerange(
       aes(
         ymin = diastolic_pressure,
@@ -199,7 +201,7 @@ plot_bmi_by_blood_pressure <- function() {
 
   print(high_pressure)
 
-  ggplot(high_pressure, aes(x = weight_type, y = proportion)) +
+  p2 <- ggplot(high_pressure, aes(x = weight_type, y = proportion)) +
     geom_col() +
     labs(
       x = "Body mass index",
@@ -214,6 +216,8 @@ plot_bmi_by_blood_pressure <- function() {
   print("Diastolic pressure across weight type:")
   print(kruskal.test(diastolic_pressure ~ weight_type, data = results))
   print(dunnTest(diastolic_pressure ~ weight_type, data = results, method = "bonferroni"))
+  print(p1)
+  print(p2)
 }
 
 plot_bmi_by_strokes <- function() {

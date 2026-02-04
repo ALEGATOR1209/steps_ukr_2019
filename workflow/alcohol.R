@@ -31,6 +31,7 @@ plot_sober <- function() {
     levels = c("18-29", "30-44", "45-59", "60-69", "18-69")
   )
 
+  print(summary(svyglm(sober ~ sex + agerange, design = survey)))
   print(results)
 
   ggplot(results, aes(x = agerange, y = sober, fill = sex)) +
@@ -70,6 +71,7 @@ plot_active_alcohol_use <- function() {
 
   print("Mean active alcohol use:")
   print(svymean(~active_use, survey, na.rm = TRUE))
+  print(summary(svyglm(active_use ~ sex + agerange, design = survey)))
 
   print("Active use over sex and age:")
   results <- bind_rows(
