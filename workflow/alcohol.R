@@ -64,12 +64,12 @@ plot_sober <- function() {
 
 plot_active_alcohol_use <- function() {
   survey <- update(
-    survey,
+    subset(survey, a5 == 1 | a5 == 2),
     active_use = ifelse(a5 == 1, 1, 0)
   )
 
   print("Mean active alcohol use:")
-  svymean(~active_use, survey, na.rm = TRUE)
+  print(svymean(~active_use, survey, na.rm = TRUE))
 
   print("Active use over sex and age:")
   results <- bind_rows(
