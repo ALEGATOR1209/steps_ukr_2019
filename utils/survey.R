@@ -59,3 +59,21 @@ step2019 <- function (data) {
     population = pop
   )
 }
+
+add_weight_type <- function (.data) {
+  data <- .data %>% mutate(
+    weight_type = case_when(
+      mbmi < 18.5 ~ "underweight",
+      mbmi < 25 ~ "normal",
+      mbmi < 30 ~ "overweight",
+      .default = "obesity"
+    )
+  )
+
+  data$weight_type <- factor(
+    data$weight_type,
+    levels = c("underweight", "normal", "overweight", "obesity")
+  )
+
+  return(data)
+}

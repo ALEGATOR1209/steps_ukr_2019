@@ -2,6 +2,7 @@ library(survey)
 library(ggplot2)
 library(forcats)
 library(scales)
+library(FSA)
 
 source("utils/survey.R")
 
@@ -67,14 +68,7 @@ plot_bmi_by_heart_rate <- function() {
     filter(!is.na(m16b) & m16b != 888) %>%
     filter(!is.na(m16c) & m16c != 888) %>%
     mutate(bps = (m16a + m16b + m16c) / 3) %>%
-    mutate(
-      weight_type = case_when(
-        mbmi < 18.5 ~ "underweight",
-        mbmi < 25 ~ "normal",
-        mbmi < 30 ~ "overweight",
-        .default = "obesity"
-      )
-    )
+    add_weight_type()
 
   results$weight_type <- factor(
     results$weight_type,
@@ -137,19 +131,7 @@ plot_bmi_by_blood_pressure <- function() {
     mutate(
       systolic_pressure = (m4a + m5a + m5a) / 3,
       diastolic_pressure = (m4b + m5b + m5b) / 3
-    ) %>% mutate(
-      weight_type = case_when(
-        mbmi < 18.5 ~ "underweight",
-        mbmi < 25 ~ "normal",
-        mbmi < 30 ~ "overweight",
-        .default = "obesity"
-      )
-    )
-
-  results$weight_type <- factor(
-    results$weight_type,
-    levels = c("underweight", "normal", "overweight", "obesity")
-  )
+    ) %>% add_weight_type()
 
   print(summary(results$systolic_pressure))
   print(summary(results$diastolic_pressure))
@@ -237,15 +219,8 @@ plot_bmi_by_blood_pressure <- function() {
 plot_bmi_by_strokes <- function() {
   results <- data %>%
     filter(!is.na(h17) & h17 != 77 & h17 != 88) %>%
-    mutate(
-      had_stroke = h17 == 1,
-      weight_type = case_when(
-        mbmi < 18.5 ~ "underweight",
-        mbmi < 25 ~ "normal",
-        mbmi < 30 ~ "overweight",
-        .default = "obesity"
-      )
-    )
+    mutate(had_stroke = h17 == 1) %>%
+    add_weight_type()
 
   results <- results %>% group_by(weight_type) %>%
     summarise(
@@ -254,11 +229,6 @@ plot_bmi_by_strokes <- function() {
       no_stroke = total - had_stroke,
       proportion = had_stroke / total,
     ) %>% ungroup()
-
-  results$weight_type <- factor(
-    results$weight_type,
-    levels = c("underweight", "normal", "overweight", "obesity")
-  )
 
   ggplot(results, aes(x = weight_type, y = proportion)) +
     geom_col() +
@@ -269,7 +239,34 @@ plot_bmi_by_strokes <- function() {
     )
 }
 
+plot_bmi_by_physical_activity <- function() {
+  results <- data %>%
+    mutate(high_activity = p1 == 1 | p10 == 1) %>%
+    mutate(
+      high_activity_days = case_when(
+        p4 == 77 | p11 == 77 ~ NA_integer_,
+        is.na(p2) & is.na(p11) ~ NA_integer_,
+        TRUE ~ pmin.int(coalesce(p2, 0) + coalesce(p11, 0), 7)
+      )
+    ) %>%
+    filter(!is.na(high_activity_days)) %>%
+    add_weight_type()
+
+  mean_activity <- results %>%
+    group_by(weight_type) %>%
+    summarise(mean_days = mean(high_activity_days, na.rm = TRUE))
+
+  ggplot(mean_activity, aes(x = weight_type, y = mean_days, fill = weight_type)) +
+    geom_col() +
+    labs(
+      x = "Body mass index",
+      y = "Number of high physical activity days per week",
+      title = "Physical activity by BMI",
+    )
+}
+
 plot_bmi_by_age()
 plot_bmi_by_heart_rate()
 plot_bmi_by_blood_pressure()
 plot_bmi_by_strokes()
+plot_bmi_by_physical_activity()
