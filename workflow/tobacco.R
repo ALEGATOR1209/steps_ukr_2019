@@ -13,7 +13,7 @@ survey <- step2019(data)
 ##################################
 
 plot_general_tobacco_use <- function() {
-  survey <- update(survey, smoker = ifelse(data$t1 == 1, 1, 0))
+  survey <- update(survey, smoker = ifelse(t1 == 1, 1, 0))
   print("Mean smoking prevalence:")
   print(svymean(~smoker, survey, na.rm = TRUE))
 
@@ -32,7 +32,7 @@ plot_general_tobacco_use <- function() {
 
   print(results)
 
-  ggplot(results, aes(x = agerange, y = smoker, fill = sex)) +
+  p <- ggplot(results, aes(x = agerange, y = smoker, fill = sex)) +
     geom_col(position = position_dodge(width = 0.8)) +
     geom_errorbar(
       aes(
@@ -54,11 +54,23 @@ plot_general_tobacco_use <- function() {
     ) +
     labs(
       x = "Age group",
-      y = "Smoking prevalence",
+      y = "Tobacco use prevalence",
       fill = "Sex",
-      title = "Smoking prevalence by sex and age",
-      subtitle = "Survey-weighted estimates with 95% confidence intervals"
     )
+
+  ggsave(
+    filename = "results/general_tobacco_use.png",
+    plot = p,
+    width = 6,
+    height = 4,
+    units = "in",
+    dpi = 300
+  )
+
+  p + labs(
+    title = "Smoking prevalence by sex and age",
+    subtitle = "Survey-weighted estimates with 95% confidence intervals"
+  )
 }
 
 plot_general_tobacco_use()
@@ -461,25 +473,33 @@ plot_tobacco_by_age <- function() {
     levels = c("18-29", "30-44", "45-59", "60-69", "18-69")
   )
 
-  ggplot(all_results, aes(x = agerange, y = prevalence, fill = product)) +
+  print(all_results)
+
+  p <- ggplot(all_results, aes(x = agerange, y = prevalence, fill = product)) +
     geom_col(position = position_dodge(width = 0.8)) +
-    geom_text(
-      aes(label = scales::percent(prevalence, accuracy = 0.01)),
-      position = position_dodge(width = 0.8),
-      vjust = -0.3,
-      size = 3.5
-    ) +
     scale_y_continuous(
       labels = percent_format(accuracy = 1),
       limits = c(0, 0.5)
     ) +
     labs(
-      x = "Tobacco product",
+      x = "Age group",
       y = "Prevalence",
-      fill = "Age group",
-      title = "Tobacco product preferences by age group",
-      subtitle = "Survey-weighted estimates with 95% confidence intervals"
+      fill = "Tobacco product",
     )
+
+  ggsave(
+    filename = "results/tobacco_use_all_types.png",
+    plot = p,
+    width = 6,
+    height = 4,
+    units = "in",
+    dpi = 300
+  )
+
+  p + labs(
+    title = "Tobacco product preferences by age group",
+    subtitle = "Survey-weighted estimates with 95% confidence intervals"
+  )
 }
 
 plot_general_vape_use()

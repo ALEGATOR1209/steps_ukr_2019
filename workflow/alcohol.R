@@ -34,7 +34,7 @@ plot_sober <- function() {
   print(summary(svyglm(sober ~ sex + agerange, design = survey)))
   print(results)
 
-  ggplot(results, aes(x = agerange, y = sober, fill = sex)) +
+  p <- ggplot(results, aes(x = agerange, y = sober, fill = sex)) +
     geom_col(position = position_dodge(width = 0.8)) +
     geom_errorbar(
       aes(
@@ -58,9 +58,21 @@ plot_sober <- function() {
       x = "Age group",
       y = "Soberity",
       fill = "Sex",
-      title = "Soberity by sex and age",
-      subtitle = "Survey-weighted estimates with 95% confidence intervals"
     )
+
+  ggsave(
+    filename = "results/soberity.png",
+    plot = p,
+    width = 6,
+    height = 4,
+    units = "in",
+    dpi = 300
+  )
+
+  p + labs(
+    title = "Soberity by sex and age",
+    subtitle = "Survey-weighted estimates with 95% confidence intervals"
+  )
 }
 
 plot_active_alcohol_use <- function() {
@@ -86,7 +98,7 @@ plot_active_alcohol_use <- function() {
 
   print(results)
 
-  ggplot(results, aes(x = agerange, y = active_use, fill = sex)) +
+  p <- ggplot(results, aes(x = agerange, y = active_use, fill = sex)) +
     geom_col(position = position_dodge(width = 0.8)) +
     geom_errorbar(
       aes(
@@ -110,9 +122,21 @@ plot_active_alcohol_use <- function() {
       x = "Age group",
       y = "Used alcohol in last 30 days, %",
       fill = "Sex",
-      title = "Alcohol use in last 30 days",
-      subtitle = "Survey-weighted estimates with 95% confidence intervals"
     )
+
+  ggsave(
+    filename = "results/active_alcohol_use.png",
+    plot = p,
+    width = 6,
+    height = 4,
+    units = "in",
+    dpi = 300
+  )
+
+  p + labs(
+    title = "Alcohol use in last 30 days",
+    subtitle = "Survey-weighted estimates with 95% confidence intervals"
+  )
 }
 
 plot_sober()

@@ -28,41 +28,44 @@ plot_bmi_by_age <- function () {
 
   print(results)
 
-  ggplot(results, aes(x = agerange, y = mbmi, fill = sex)) +
+  p <- ggplot(results, aes(x = agerange, y = mbmi, fill = sex)) +
     geom_col(position = position_dodge(width = 0.8)) +
-    geom_errorbar(
-      aes(
-        ymin = mbmi - 1.96 * se,
-        ymax = mbmi + 1.96 * se
-      ),
-      position = position_dodge(width = 0.8),
-      width = 0.2
-    ) +
-    geom_text(
-      aes(label = floor(mbmi * 100) / 100),
-      position = position_dodge(width = 1.2),
-      vjust = -0.3,
-      size = 3.5
-    ) +
     geom_hline(
-      yintercept = 25,
+      aes(yintercept = 25, color = "Overweight (BMI = 25)"),
       linetype = "dashed",
-      color = "yellow",
       linewidth = 1
     ) +
     geom_hline(
-      yintercept = 30,
+      aes(yintercept = 30, color = "Obesity (BMI = 30)"),
       linetype = "dashed",
-      color = "red",
       linewidth = 1
+    ) +
+    scale_color_manual(
+      name = "BMI thresholds",
+      values = c(
+        "Overweight (BMI = 25)" = "yellow",
+        "Obesity (BMI = 30)" = "red"
+      )
     ) +
     labs(
       x = "Age group",
       y = "BMI",
       fill = "Sex",
-      title = "BMI by sex and age",
-      subtitle = "Survey-weighted estimates with 95% confidence intervals"
     )
+
+  ggsave(
+    filename = "results/bmi.png",
+    plot = p,
+    width = 6,
+    height = 4,
+    units = "in",
+    dpi = 300
+  )
+
+  p + labs(
+    title = "BMI by sex and age",
+    subtitle = "Survey-weighted estimates with 95% confidence intervals"
+  )
 }
 
 plot_bmi_by_heart_rate <- function() {
@@ -72,11 +75,7 @@ plot_bmi_by_heart_rate <- function() {
     mutate(bps = (m16a + m16b + m16c) / 3) %>%
     add_weight_type()
 
-  results$weight_type <- factor(
-    results$weight_type,
-    levels = c("underweight", "normal", "overweight", "obesity")
-  )
-
+  print(kruskal.test(bps ~ weight_type, data = results))
   print(dunnTest(bps ~ weight_type, data = results, method = "bonferroni"))
 
   print(summary(results$bps))
@@ -187,7 +186,6 @@ plot_bmi_by_blood_pressure <- function() {
     labs(
       x = "Body mass index",
       y = "Blood pressure, mmHg",
-      title = "BMI by blood pressure",
     )
 
   high_pressure <- results %>%
@@ -196,8 +194,19 @@ plot_bmi_by_blood_pressure <- function() {
     summarise(
       total = n(),
       high_bp_n = sum(high_bp, na.rm = TRUE),
-      proportion = high_bp_n / total
-    ) %>% ungroup()
+      proportion = high_bp_n / total,
+      odds_high_bp = high_bp_n / (total - high_bp_n),
+      .groups = "drop"
+    )
+
+  odds_normal <- high_pressure %>%
+    filter(weight_type == "normal") %>%
+    pull(odds_high_bp)
+
+  high_pressure <- high_pressure %>%
+    mutate(
+      odds_ratio_vs_normal = odds_high_bp / odds_normal
+    )
 
   print(high_pressure)
 
@@ -206,8 +215,25 @@ plot_bmi_by_blood_pressure <- function() {
     labs(
       x = "Body mass index",
       y = "Proportion of respondents with high pressure",
-      title = "BMI by blood pressure",
     )
+
+  ggsave(
+    filename = "results/bmi_blood_pressure.png",
+    plot = p1,
+    width = 6,
+    height = 4,
+    units = "in",
+    dpi = 300
+  )
+
+  ggsave(
+    filename = "results/bmi_high_pressure.png",
+    plot = p2,
+    width = 6,
+    height = 4,
+    units = "in",
+    dpi = 300
+  )
 
   print("Systolic pressure across weight type:")
   print(kruskal.test(systolic_pressure ~ weight_type, data = results))
@@ -216,8 +242,8 @@ plot_bmi_by_blood_pressure <- function() {
   print("Diastolic pressure across weight type:")
   print(kruskal.test(diastolic_pressure ~ weight_type, data = results))
   print(dunnTest(diastolic_pressure ~ weight_type, data = results, method = "bonferroni"))
-  print(p1)
-  print(p2)
+  print(p1 + labs(title = "BMI by blood pressure"))
+  print(p2 + labs(title = "BMI by blood pressure"))
 }
 
 plot_bmi_by_strokes <- function() {
@@ -230,17 +256,45 @@ plot_bmi_by_strokes <- function() {
     summarise(
       total = n(),
       had_stroke = sum(had_stroke, na.rm = TRUE),
-      no_stroke = total - had_stroke,
       proportion = had_stroke / total,
-    ) %>% ungroup()
+      odds_stroke = had_stroke / (total - had_stroke),
+      .groups = "drop"
+    )
 
-  ggplot(results, aes(x = weight_type, y = proportion)) +
+  odds_normal <- results %>%
+    filter(weight_type == "normal") %>%
+    pull(odds_stroke)
+
+  results <- results %>%
+    mutate(
+      odds_ratio_vs_normal = odds_stroke / odds_normal
+    )
+
+  print(results)
+
+  p <- ggplot(results, aes(x = weight_type, y = proportion)) +
     geom_col() +
     labs(
       x = "Body mass index",
-      y = "Proportion of respondents that had heart attacks",
-      title = "Heart attacks by BMI",
+      y = "Proportion of respondents that had heart problems",
     )
+
+  ggsave(
+    filename = "results/bmi_strokes.png",
+    plot = p,
+    width = 6,
+    height = 4,
+    units = "in",
+    dpi = 300
+  )
+
+  print("Strokes across weight type:")
+  print(kruskal.test(had_stroke ~ weight_type, data = results))
+  print(dunnTest(had_stroke ~ weight_type, data = results, method = "bonferroni"))
+
+  p + labs(
+    title = "Heart attacks by BMI",
+  )
 }
 
 plot_bmi_by_physical_activity <- function() {
