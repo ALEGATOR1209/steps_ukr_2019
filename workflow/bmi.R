@@ -210,12 +210,12 @@ plot_bmi_by_blood_pressure <- function() {
 
   print(high_pressure)
 
-  p2 <- ggplot(high_pressure, aes(x = weight_type, y = proportion)) +
+  p2 <- ggplot(high_pressure, aes(x = weight_type, y = proportion, fill = weight_type)) +
     geom_col() +
     labs(
       x = "Body mass index",
       y = "Proportion of respondents with high pressure",
-    )
+    ) + theme(legend.position = "none")
 
   ggsave(
     filename = "results/bmi_blood_pressure.png",
@@ -272,12 +272,12 @@ plot_bmi_by_strokes <- function() {
 
   print(results)
 
-  p <- ggplot(results, aes(x = weight_type, y = proportion)) +
+  p <- ggplot(results, aes(x = weight_type, y = proportion, fill = weight_type)) +
     geom_col() +
     labs(
       x = "Body mass index",
       y = "Proportion of respondents that had heart problems",
-    )
+    ) + theme(legend.position = "none")
 
   ggsave(
     filename = "results/bmi_strokes.png",

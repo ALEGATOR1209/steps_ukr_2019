@@ -67,9 +67,6 @@ fit_firth_model <- function(data, formula) {
   cat(sprintf("Number of events: %d (%.2f%%)\n",
               sum(model_data), 100 * mean(model_data)))
 
-  plot(roc_obj, main = "ROC Curve - Firth Logistic Regression",
-       print.auc = TRUE, print.auc.y = 0.4)
-
   return(list(
     model = model,
     auc = auc_value,
@@ -130,9 +127,6 @@ fit_glm_model <- function(data, formula) {
   cat(sprintf("Number of events: %d (%.2f%%)\n",
               sum(model_data), 100 * mean(model_data)))
 
-  plot(roc_obj, main = "ROC Curve - Standard GLM",
-       print.auc = TRUE, print.auc.y = 0.4)
-
   return(list(
     model = model,
     auc = auc_value,
@@ -192,9 +186,6 @@ fit_svyglm_model <- function(data, formula, survey_design) {
   cat(sprintf("Effective sample size: %.1f\n",
               sum(weights(survey_design, "sampling"))))
 
-  plot(roc_obj, main = "ROC Curve - Survey-weighted GLM",
-       print.auc = TRUE, print.auc.y = 0.4)
-
   return(list(
     model = model,
     auc = auc_value,
@@ -243,24 +234,22 @@ cat("\n" , rep("=", 60), "\n", sep = "")
 cat("FITTING THREE MODELS\n")
 cat(rep("=", 60), "\n", sep = "")
 
-par(mfrow = c(2, 2))
-
 firth_results <- fit_firth_model(results, formula)
 glm_results <- fit_glm_model(results, formula)
 svyglm_results <- fit_svyglm_model(results, formula, survey)
 
-plot(firth_results$roc, col = "blue", main = "ROC Curve Comparison")
-lines(glm_results$roc, col = "red")
+plot(glm_results$roc, col = "blue", main = "ROC Curve Comparison")
+lines(firth_results$roc, col = "red")
 lines(svyglm_results$roc, col = "green")
 legend("bottomright",
        legend = c(
-         sprintf("Firth (AUC=%.3f)", firth_results$auc),
          sprintf("GLM (AUC=%.3f)", glm_results$auc),
+         sprintf("Firth (AUC=%.3f)", firth_results$auc),
          sprintf("Survey GLM (AUC=%.3f)", svyglm_results$auc)
        ),
        col = c("blue", "red", "green"),
        lty = 1,
-       cex = 0.8)
+       cex = 1.8)
 
 par(mfrow = c(1, 1))
 

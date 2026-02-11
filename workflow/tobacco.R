@@ -473,18 +473,22 @@ plot_tobacco_by_age <- function() {
     levels = c("18-29", "30-44", "45-59", "60-69", "18-69")
   )
 
-  print(all_results)
-
   p <- ggplot(all_results, aes(x = agerange, y = prevalence, fill = product)) +
     geom_col(position = position_dodge(width = 0.8)) +
+    geom_text(
+      aes(label = scales::percent(prevalence, accuracy = 0.01)),
+      position = position_dodge(width = 0.8),
+      vjust = -0.3,
+      size = 3.5
+    ) +
     scale_y_continuous(
       labels = percent_format(accuracy = 1),
       limits = c(0, 0.5)
     ) +
     labs(
-      x = "Age group",
+      x = "Tobacco product",
       y = "Prevalence",
-      fill = "Tobacco product",
+      fill = "Age group",
     )
 
   ggsave(
